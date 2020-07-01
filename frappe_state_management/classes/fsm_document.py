@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe_state_management.classes.fsm_error import MethodNotDefinedError
 from frappe_state_management.frappe_state_management.doctype.update_request.update_request import UpdateRequest
 
 
@@ -15,12 +16,20 @@ class FSMDocument(Document):
     self.update_request = update_request
 
     if self.update_request.status in ('Approved', 'Pending'):
-      # TODO: Setup calling the relevant function
-
-      # TODO: Call custom methods
-      pass
+      method_call = None
+      if self.update_request.custom_call:
+        if '.' in self.update_request.custom_call:
+          method_call = frappe.get_attr(self.update_request.custom_call)
+        else:
+          method_call = getattr(self, self.update_request.custom_call)
+      else:
+        method_call = getattr(self, "_{}".format(self.update_request.docfield))
+      if not method_call:
+        raise MethodNotDefinedError
+      method_call(**{'data': self.update_request.data})
     elif self.update_request.status == 'Pending Approval':
       frappe.throw(_('Update Request is Pending Approval'))
+
     else:
       frappe.throw(_('Update Request processed. Create a new one for updates'))
 
