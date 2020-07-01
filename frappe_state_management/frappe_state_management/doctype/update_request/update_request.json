@@ -1,0 +1,169 @@
+{
+ "creation": "2020-07-01 11:57:41.452479",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "status",
+  "dt",
+  "docname",
+  "docfield",
+  "type",
+  "data",
+  "section_break_7",
+  "custom_call",
+  "actor",
+  "approval_party",
+  "column_break_10",
+  "approved_by",
+  "rejected_by",
+  "section_break_12",
+  "revert_data",
+  "error",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "allow_on_submit": 1,
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Pending\nPending Approval\nApproved\nRejected\nSuccess\nFailed",
+   "read_only": 1
+  },
+  {
+   "description": "Child doctypes not allowed",
+   "fieldname": "dt",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Doctype",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "docname",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Docname",
+   "options": "dt",
+   "reqd": 1
+  },
+  {
+   "fieldname": "docfield",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Docfield"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "\nSelect\nCheck\nField\nDocstatus\nAdd Child Row\nUpdate Child Row\nDelete Child Row"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Code",
+   "label": "Data"
+  },
+  {
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_call",
+   "fieldtype": "Data",
+   "label": "Custom Call"
+  },
+  {
+   "fieldname": "actor",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Party Type",
+   "options": "FSM Party Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "approval_party",
+   "fieldtype": "Link",
+   "label": "Approval Party",
+   "options": "FSM Party Type"
+  },
+  {
+   "fieldname": "column_break_10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "rejected_by",
+   "fieldtype": "Link",
+   "label": "Rejected By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "revert_data",
+   "fieldtype": "Code",
+   "label": "Revert Data",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "error",
+   "fieldtype": "Code",
+   "label": "Error",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Update Request",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "modified": "2020-07-01 15:44:22.635559",
+ "modified_by": "Administrator",
+ "module": "Frappe State Management",
+ "name": "Update Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "All",
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
