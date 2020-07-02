@@ -16,7 +16,9 @@
   "approval_party",
   "column_break_10",
   "approved_by",
+  "approved_on",
   "rejected_by",
+  "rejected_on",
   "section_break_12",
   "revert_data",
   "error",
@@ -134,10 +136,20 @@
    "label": "Party Type",
    "options": "FSM Party Type",
    "reqd": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On"
+  },
+  {
+   "fieldname": "rejected_on",
+   "fieldtype": "Datetime",
+   "label": "Rejected On"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-02 09:57:09.711145",
+ "modified": "2020-07-02 12:07:25.028259",
  "modified_by": "Administrator",
  "module": "Frappe State Management",
  "name": "Update Request",

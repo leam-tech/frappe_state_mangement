@@ -4,6 +4,8 @@
 
 from __future__ import unicode_literals
 
+from datetime import datetime
+
 import frappe
 from frappe import _, ValidationError
 from frappe.model.document import Document
@@ -21,7 +23,9 @@ class UpdateRequest(Document):
   party_type: str
   approval_party: str
   approved_by: str
+  approved_on: datetime
   rejected_by: str
+  rejected_on: datetime
   revert_data: str
   error: str
 
@@ -63,8 +67,12 @@ class UpdateRequest(Document):
       self.revert_data = ''
     if self.approved_by:
       self.approval_party = ''
+    if self.approved_on:
+      self.approved_on = None
     if self.rejected_by:
       self.rejected_by = ''
+    if self.approved_on:
+      self.rejected_on = None
 
   def on_submit(self):
     """
