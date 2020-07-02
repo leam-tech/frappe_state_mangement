@@ -26,7 +26,7 @@ class UpdateRequest(Document):
   approved_on: datetime
   rejected_by: str
   rejected_on: datetime
-  revert_data: str
+  revert_items: list
   error: str
 
   def validate(self):
@@ -63,8 +63,8 @@ class UpdateRequest(Document):
       self.status = 'Pending'
     if self.error:
       self.error = ''
-    if self.revert_data:
-      self.revert_data = ''
+    if self.revert_items:
+      self.revert_items = []
     if self.approved_by:
       self.approval_party = ''
     if self.approved_on:

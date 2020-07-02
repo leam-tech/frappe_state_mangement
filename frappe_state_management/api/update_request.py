@@ -4,9 +4,10 @@ from frappe_state_management.frappe_state_management.doctype.update_request.upda
 
 
 @frappe.whitelist()
-def approve_update_request(update_request: str) -> dict:
+def approve(update_request: str) -> dict:
   """
   Approve an update request.
+  :param update_request: The update request's name that will be approved
   :return:
   """
   user = frappe.session.user
@@ -20,9 +21,10 @@ def approve_update_request(update_request: str) -> dict:
 
 
 @frappe.whitelist()
-def reject_update_request(update_request: str) -> dict:
+def reject(update_request: str) -> dict:
   """
   Reject an update request.
+  :param update_request: The update request's name that will be rejected
   :return:
   """
   user = frappe.session.user
