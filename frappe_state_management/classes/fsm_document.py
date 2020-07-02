@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe_state_management.classes.fsm_error import MethodNotDefinedError
+from frappe_state_management.classes.fsm_error import MethodNotDefinedError, MissingRevertDataError
 from frappe_state_management.frappe_state_management.doctype.update_request.update_request import UpdateRequest
 from six import string_types
 
@@ -33,7 +33,10 @@ class FSMDocument(Document):
         if self.update_request.data:
           if isinstance(data, string_types):
             data = frappe.parse_json(self.update_request.data)
-        method_call(**{'data': data})
+        revert_data = method_call(**{'data': data})
+        if not revert_data:
+          raise MissingRevertDataError
+        self.add_revert_data(revert_data)
 
       elif self.update_request.status == 'Pending Approval':
         frappe.throw(_('Update Request is Pending Approval'))
@@ -65,3 +68,7 @@ class FSMDocument(Document):
   def add_error_to_update_request(self, error: str):
     self.update_request.error = error
     self.set_as_failed()
+
+  def add_revert_data(self, revert_data):
+    self.update_request.revert_data = revert_data
+    self.update_request.save(ignore_permissions=True)

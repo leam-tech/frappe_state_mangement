@@ -46,3 +46,12 @@ class MethodNotDefinedError(FSMError):
 
   def __init__(self):
     super().__init__(message="Field's method not defined for the FSMDocument")
+
+
+class MissingRevertDataError(FSMError):
+  """
+  Error thrown when the called method or function does not return revert_data
+  """
+
+  def __init__(self):
+    super().__init__(message="Method does not return revert_data. Make sure the function returns the relevant data")
