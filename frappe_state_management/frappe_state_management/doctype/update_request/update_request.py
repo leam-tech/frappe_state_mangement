@@ -21,6 +21,7 @@ class UpdateRequest(Document):
   party_type: str
   approval_party: str
   approved_by: str
+  rejected_by: str
   revert_data: str
   error: str
 
@@ -47,12 +48,43 @@ class UpdateRequest(Document):
       frappe.throw(_("Either docfield or Custom Call should be specified"), ValidationError)
 
     if self.docfield and not self.type:
-      frappe.throw(_("Docfield update "), ValidationError)
+      frappe.throw(_("Docfield type must be selected"), ValidationError)
+
+  def before_insert(self):
+    """
+    Make sure that the status and other fields are set correctly
+    :return:
+    """
+    if self.status != 'Pending':
+      self.status = 'Pending'
+    if self.error:
+      self.error = ''
+    if self.revert_data:
+      self.revert_data = ''
+    if self.approved_by:
+      self.approval_party = ''
+    if self.rejected_by:
+      self.rejected_by = ''
 
   def on_submit(self):
     """
     Applies the update on the target doctype by calling the `apply_update_request`
     :return:
     """
+    self.apply_update_request()
+
+  def on_update_after_submit(self):
+    """
+    In case the update request is approved, apply the update request
+    :return:
+    """
+    if self.status == 'Approved':
+      self.apply_update_request()
+
+  def apply_update_request(self):
+    """
+    Applies the update request by calling `FSMDocument` apply_update_request
+    :return:
+    """
     doc = frappe.get_doc(self.dt, self.docname)
-    getattr(doc, 'apply_update_request')(self, self.data)
+    getattr(doc, 'apply_update_request')(self)
