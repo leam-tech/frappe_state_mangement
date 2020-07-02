@@ -10,6 +10,7 @@ from six import string_types
 class FSMDocument(Document):
   # TODO: Add documentation
   update_request: UpdateRequest
+  is_revert = False
 
   def revert(self, revert_data: dict):
     raise NotImplementedError
@@ -64,16 +65,56 @@ class FSMDocument(Document):
     self.update_request.save(ignore_permissions=True)
 
   def on_update(self):
-    self.set_as_success()
+    """
+    Set the Update Request as "Success"
+    If the method is implemented in the subclass, to be called in the subclass's method as:
+    super().on_update()
+    :return:
+    """
+    if self.is_revert:
+      self.set_as_reverted()
+    else:
+      self.set_as_success()
 
   def on_update_after_submit(self):
-    self.set_as_success()
+    """
+        Set the Update Request as "Success"
+        If the method is implemented in the subclass, to be called in the subclass's method as:
+        super().on_update_after_submit()
+        :return:
+        """
+    if self.is_revert:
+      self.set_as_reverted()
+    else:
+      self.set_as_success()
 
   def add_error_to_update_request(self, error: str):
+    """
+    Add the error object to the Update Request and mark it as "Failed"
+    :param error: The error string
+    :return:
+    """
     self.update_request.error = error
     self.set_as_failed()
 
   def add_revert_data(self, revert_items: list):
+    """
+    Add the items affected by the Update Request.
+    Three types are:
+    - Create
+    - Update
+    - Remove
+    :param revert_items: List of items affected by the Update Request
+    :return:
+    """
     for item in revert_items:
       self.update_request.append('revert_items', item)
     self.update_request.save(ignore_permissions=True)
+
+  def set_as_reverted(self):
+    """
+    Marks the Update Request as "Reverted"
+    :return:
+    """
+    self.is_revert = False
+    self.update_request.status = 'Reverted'
