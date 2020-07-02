@@ -18,7 +18,7 @@ class UpdateRequest(Document):
   type: str
   data: str
   custom_call: str
-  actor: str
+  party_type: str
   approval_party: str
   approved_by: str
   revert_data: str

@@ -12,7 +12,7 @@
   "data",
   "section_break_7",
   "custom_call",
-  "actor",
+  "party_type",
   "approval_party",
   "column_break_10",
   "approved_by",
@@ -75,14 +75,6 @@
    "label": "Custom Call"
   },
   {
-   "fieldname": "actor",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Party Type",
-   "options": "FSM Party Type",
-   "reqd": 1
-  },
-  {
    "fieldname": "approval_party",
    "fieldtype": "Link",
    "label": "Approval Party",
@@ -134,10 +126,18 @@
    "options": "Update Request",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Party Type",
+   "options": "FSM Party Type",
+   "reqd": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-01 15:44:22.635559",
+ "modified": "2020-07-02 09:57:09.711145",
  "modified_by": "Administrator",
  "module": "Frappe State Management",
  "name": "Update Request",
