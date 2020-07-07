@@ -138,6 +138,18 @@ class FSMDocument(Document):
   def is_approved(self):
     return self.update_request.status == 'Approved'
 
+  def is_child_add(self):
+    return self.update_request.type == 'Add Child Row'
+
+  def is_child_update(self):
+    return self.update_request.type == 'Update Child Row'
+
+  def is_child_delete(self):
+    return self.update_request.type == 'Delete Child Row'
+
+  def parse_data(self):
+    return frappe._dict(frappe.parse_json(frappe.parse_json(copy.copy(self.update_request.data))))
+
   def validate_child_table(self):
     # Validate if `data` field is not provided, raise Error
     if self.update_request.type in child_row_methods:
@@ -145,7 +157,7 @@ class FSMDocument(Document):
         raise MissingOrInvalidDataError
       # Check if the data can be parsed to dict
       try:
-        data = frappe.parse_json(self.update_request.data)
+        data = self.parse_data()
       except:
         raise MissingOrInvalidDataError
       # If we are deleting or updating a child, verify if the child_row exists
