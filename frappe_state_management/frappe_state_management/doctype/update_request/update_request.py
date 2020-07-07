@@ -65,15 +65,15 @@ class UpdateRequest(Document):
       self.error = ''
     if self.revert_items:
       self.revert_items = []
-    if self.approved_by:
+    if self.approval_party:
       self.approval_party = ''
+    if self.approved_by:
+      self.approved_by = ''
     if self.approved_on:
       self.approved_on = None
     if self.rejected_by:
       self.rejected_by = ''
-    if self.approved_by:
-      self.approved_by = ''
-    if self.approved_on:
+    if self.rejected_on:
       self.rejected_on = None
 
   def on_submit(self):
