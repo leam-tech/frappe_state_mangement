@@ -1,3 +1,5 @@
+import copy
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -11,13 +13,14 @@ class FSMDocument(Document):
   # TODO: Add documentation
   update_request: UpdateRequest
   is_revert = False
+  doc_before_save: Document
 
   def revert(self, revert_data: dict):
     raise NotImplementedError
 
   def apply_update_request(self, update_request: UpdateRequest) -> None:
     self.update_request = update_request
-
+    self.doc_before_save = copy.copy(self)
     try:
       if self.update_request.status in ('Approved', 'Pending'):
         method_call = None
@@ -35,7 +38,7 @@ class FSMDocument(Document):
         if self.update_request.data:
           if isinstance(data, string_types):
             data = frappe.parse_json(self.update_request.data)
-        revert_data = method_call(**{'data': data})
+        revert_data = method_call()
         if not revert_data or not len(revert_data):
           raise MissingRevertDataError
         self.add_revert_data(revert_data)
@@ -118,3 +121,10 @@ class FSMDocument(Document):
     """
     self.is_revert = False
     self.update_request.status = 'Reverted'
+
+  def has_update_request(self):
+    return getattr(self, 'update_request', None)
+
+  def standard_revert_data(self) -> list:
+    return [{'dt': self.doctype, 'docname': self.name, 'change_type': 'Update',
+             'revert_data': str(self.doc_before_save.as_dict())}]
