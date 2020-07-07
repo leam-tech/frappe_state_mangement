@@ -71,6 +71,8 @@ class UpdateRequest(Document):
       self.approved_on = None
     if self.rejected_by:
       self.rejected_by = ''
+    if self.approved_by:
+      self.approved_by = ''
     if self.approved_on:
       self.rejected_on = None
 

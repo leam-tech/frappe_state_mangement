@@ -6,8 +6,6 @@ from frappe.model.document import Document
 from frappe_state_management.classes.fsm_error import MethodNotDefinedError, MissingRevertDataError
 from frappe_state_management.frappe_state_management.doctype.update_request.update_request import UpdateRequest
 
-from six import string_types
-
 
 class FSMDocument(Document):
   # TODO: Add documentation
@@ -34,14 +32,11 @@ class FSMDocument(Document):
         if not method_call:
           raise MethodNotDefinedError
 
-        data = None
-        if self.update_request.data:
-          if isinstance(data, string_types):
-            data = frappe.parse_json(self.update_request.data)
         revert_data = method_call()
-        if not revert_data or not len(revert_data):
-          raise MissingRevertDataError
-        self.add_revert_data(revert_data)
+        if not self.is_pending_approval():
+          if not revert_data or not len(revert_data):
+            raise MissingRevertDataError
+          self.add_revert_data(revert_data)
 
         # Finally save the document if there are no exceptions raised
         self.save(ignore_permissions=True)
@@ -74,10 +69,11 @@ class FSMDocument(Document):
     super().on_update()
     :return:
     """
-    if self.is_revert:
-      self.set_as_reverted()
-    else:
-      self.set_as_success()
+    if not self.is_pending_approval():
+      if self.is_revert:
+        self.set_as_reverted()
+      else:
+        self.set_as_success()
 
   def on_update_after_submit(self):
     """
@@ -86,10 +82,11 @@ class FSMDocument(Document):
         super().on_update_after_submit()
         :return:
         """
-    if self.is_revert:
-      self.set_as_reverted()
-    else:
-      self.set_as_success()
+    if not self.is_pending_approval():
+      if self.is_revert:
+        self.set_as_reverted()
+      else:
+        self.set_as_success()
 
   def add_error_to_update_request(self, error: str):
     """
@@ -112,7 +109,6 @@ class FSMDocument(Document):
     """
     for item in revert_items:
       self.update_request.append('revert_items', item)
-    self.update_request.save(ignore_permissions=True)
 
   def set_as_reverted(self):
     """
@@ -128,3 +124,12 @@ class FSMDocument(Document):
   def standard_revert_data(self) -> list:
     return [{'dt': self.doctype, 'docname': self.name, 'change_type': 'Update',
              'revert_data': str(self.doc_before_save.as_dict())}]
+
+  def is_pending(self):
+    return self.update_request.status == 'Pending'
+
+  def is_pending_approval(self):
+    return self.update_request.status == 'Pending Approval'
+
+  def is_approved(self):
+    return self.update_request.status == 'Approved'
