@@ -55,3 +55,12 @@ class MissingRevertDataError(FSMError):
 
   def __init__(self):
     super().__init__(message="Method does not return revert_data. Make sure the function returns the relevant data")
+
+
+class MissingOrInvalidDataError(FSMError):
+  """
+  Error thrown when there's a child row update (Add/Remove/Update) and "data" field is empty or in the wrong format
+  """
+
+  def __init__(self):
+    super().__init__(message="Data field is either missing or invalid to update the child table")

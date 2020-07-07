@@ -3,8 +3,11 @@ import copy
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe_state_management.classes.fsm_error import MethodNotDefinedError, MissingRevertDataError
+from frappe_state_management.classes.fsm_error import MethodNotDefinedError, MissingRevertDataError, \
+  MissingOrInvalidDataError
 from frappe_state_management.frappe_state_management.doctype.update_request.update_request import UpdateRequest
+
+child_row_methods = ['Add Child Row', 'Update Child Row', 'Delete Child Row']
 
 
 class FSMDocument(Document):
@@ -19,6 +22,7 @@ class FSMDocument(Document):
   def apply_update_request(self, update_request: UpdateRequest) -> None:
     self.update_request = update_request
     self.doc_before_save = copy.copy(self)
+    self.validate_child_table()
     try:
       if self.update_request.status in ('Approved', 'Pending'):
         method_call = None
@@ -133,3 +137,17 @@ class FSMDocument(Document):
 
   def is_approved(self):
     return self.update_request.status == 'Approved'
+
+  def validate_child_table(self):
+    # Validate if `data` field is not provided, raise Error
+    if self.update_request.type in child_row_methods and not self.update_request.data:
+      raise MissingOrInvalidDataError
+    # Check if the data can be parsed to dict
+    try:
+      data = frappe.parse_json(self.update_request.data)
+    except:
+      raise MissingOrInvalidDataError
+    # If we are deleting or updating a child, verify if the child_row exists
+    if self.update_request.type in ['Update Child Row', 'Delete Child Row']:
+      if not any([x.name == data.get('name', None) for x in getattr(self, self.update_request.docfield, [])]):
+        raise MissingOrInvalidDataError
