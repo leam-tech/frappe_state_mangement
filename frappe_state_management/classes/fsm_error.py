@@ -24,8 +24,8 @@ class InvalidFieldTransitionError(FSMError):
   For example, order.status from Ordered => Completed
   """
 
-  def __init__(self, transition):
-    super().__init__(message="Can't transition to {}".format(transition))
+  def __init__(self, field):
+    super().__init__(message="Invalid Transition of the field '{}'".format(field))
 
 
 class PendingUpdateRequestError(FSMError):
