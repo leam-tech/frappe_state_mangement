@@ -97,7 +97,7 @@ class FSMDocument(Document):
     super().on_update()
     :return:
     """
-    if not self.is_pending_approval():
+    if self.get('update_request') and not self.is_pending_approval():
       if self.is_revert:
         self.set_as_reverted()
       else:
@@ -110,7 +110,7 @@ class FSMDocument(Document):
         super().on_update_after_submit()
         :return:
         """
-    if not self.is_pending_approval():
+    if self.self.get('update_request') and not self.is_pending_approval():
       if self.is_revert:
         self.set_as_reverted()
       else:
