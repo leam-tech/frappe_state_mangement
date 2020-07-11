@@ -7,15 +7,15 @@ class FSMError(Exception):
     super().__init__(message)
 
 
-class InvalidActorError(FSMError):
+class InvalidPartyError(FSMError):
   """
-  Error thrown when the wrong actor applies an update request
+  Error thrown when the wrong party applies an update request
   """
 
-  def __init__(self, wrong_actor, correct_actor):
+  def __init__(self, wrong_party, correct_party):
     super().__init__(
-        message="Invalid Actor, must be {correct_actor}; got {wrong_actor} instead".format(correct_actor=correct_actor,
-                                                                                           wrong_actor=wrong_actor))
+        message="Invalid Party, must be {correct_party}; got {wrong_party} instead".format(correct_party=correct_party,
+                                                                                           wrong_party=wrong_party))
 
 
 class InvalidFieldTransitionError(FSMError):
