@@ -16,8 +16,32 @@ class FSMDocument(Document):
   is_revert = False
   doc_before_save: Document
 
-  def revert(self, revert_data: dict):
-    raise NotImplementedError
+  def revert(self, update_request: UpdateRequest):
+    self.update_request = update_request
+    self.is_revert = True
+
+    for revert_item in update_request.revert_items:
+      doc: Document = frappe.get_doc(revert_item.dt, revert_item.docname)
+      revert_data = frappe._dict(self.parse_data(revert_item.revert_data))
+      if revert_item.change_type == 'Create':
+        meta = frappe.get_meta(revert_item.dt)
+        # If submittable, cancel the doc instead of delete
+        if meta.get('is_submittable', None):
+          doc.cancel()
+        else:
+          doc.delete()
+      elif revert_item.change_type == 'Update':
+        doc.update(revert_data)
+        doc.save()
+      elif revert_item.change_type == 'Remove':
+        doc = frappe.new_doc(revert_item.dt)
+        doc.update(revert_data)
+        doc.save()
+
+    if len(update_request.revert_items):
+      self.set_as_reverted()
+
+    return self.update_request
 
   def apply_update_request(self, update_request: UpdateRequest) -> None:
     self.update_request = update_request
@@ -147,8 +171,8 @@ class FSMDocument(Document):
   def is_child_delete(self):
     return self.update_request.type == 'Delete Child Row'
 
-  def parse_data(self):
-    return frappe._dict(frappe.parse_json(frappe.parse_json(copy.copy(self.update_request.data))))
+  def parse_data(self, data=None):
+    return frappe._dict(frappe.parse_json(frappe.parse_json(copy.copy(data or self.update_request.data))))
 
   def validate_child_table(self):
     # Validate if `data` field is not provided, raise Error

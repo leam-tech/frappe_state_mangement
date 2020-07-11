@@ -98,3 +98,34 @@ class UpdateRequest(Document):
     """
     doc = frappe.get_doc(self.dt, self.docname)
     getattr(doc, 'apply_update_request')(self)
+
+  def revert(self):
+    """
+    Calls the revert function of the document.
+    Validates before applying the revert
+    :return:
+    """
+    self.validate_revert()
+
+    doc = frappe.get_doc(self.dt, self.docname)
+    getattr(doc, 'revert')(self)
+
+  def validate_revert(self):
+    """
+    Validates the conditions before applying the revert
+    1- Must be a Successful update request
+    2- Must be the last Successful update request
+    :return:
+    """
+    # Check if the Update Request is successful
+    if self.status != 'Success':
+      frappe.throw("Update Request is not marked as successful")
+
+    # Check if the update request is the latest
+    prev = frappe.get_all("Update Request", filters={'status': 'Success', 'dt': self.dt, 'docname': self.docname},
+                          order_by='modified_date DESC')
+
+    if len(prev) and prev[0].name == self.name:
+      return
+
+    frappe.throw("Not the latest Successful Update Request")
