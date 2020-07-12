@@ -50,17 +50,22 @@ class FSMDocument(Document):
     try:
       if self.update_request.status in ('Approved', 'Pending'):
         method_call = None
+        revert_data = None
         if self.update_request.custom_call:
           if '.' in self.update_request.custom_call:
             method_call = frappe.get_attr(self.update_request.custom_call)
           else:
             method_call = getattr(self, self.update_request.custom_call, None)
+        elif frappe.get_hooks('fsm_fields', {}).get(self.doctype, {}).get(self.update_request.docfield):
+          revert_data = frappe.call(frappe.get_hooks('fsm_fields', {}).get(self.doctype, {}).get(self.update_request.docfield)[-1], self)
         else:
           method_call = getattr(self, "_{}".format(self.update_request.docfield), None)
-        if not method_call:
+        
+        if not (method_call or revert_data):
           raise MethodNotDefinedError
 
-        revert_data = method_call()
+        if not revert_data and method_call:
+          revert_data = method_call()
         if not self.is_pending_approval():
           if not revert_data or not len(revert_data):
             raise MissingRevertDataError
