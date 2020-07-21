@@ -43,6 +43,38 @@ class FSMDocument(Document):
 
     return self.update_request
 
+  def create_document(self, update_request: UpdateRequest):
+    """
+    Called if the update request is of type "Create".
+    Revert data is irrelevant hence there's no validation for it
+    :param update_request:
+    :return:
+    """
+    self.update_request = update_request
+    try:
+      if self.update_request.status in ('Approved', 'Pending'):
+        method_call = None
+        data = self.parse_data()
+        if self.update_request.custom_call:
+          if '.' in self.update_request.custom_call:
+            method_call = frappe.get_attr(self.update_request.custom_call)
+          else:
+            method_call = getattr(self, self.update_request.custom_call)
+
+        # If a method is specified, use it, otherwise create the document without inserting
+        if not method_call:
+          getattr(self, '_create_')()
+        else:
+          method_call(data)
+
+      elif self.update_request.status == 'Pending Approval':
+        frappe.throw(_('Update Request is Pending Approval'))
+      else:
+        frappe.throw(_('Update Request processed. Create a new one for updates'))
+    except Exception as e:
+      self.add_error_to_update_request(
+          "Exception Name: {name}\nException Message: {message}".format(name=type(e).__name__, message=str(e)))
+
   def apply_update_request(self, update_request: UpdateRequest) -> None:
     self.update_request = update_request
     self.doc_before_save = copy.copy(self)
@@ -57,10 +89,11 @@ class FSMDocument(Document):
           else:
             method_call = getattr(self, self.update_request.custom_call, None)
         elif frappe.get_hooks('fsm_fields', {}).get(self.doctype, {}).get(self.update_request.docfield):
-          revert_data = frappe.call(frappe.get_hooks('fsm_fields', {}).get(self.doctype, {}).get(self.update_request.docfield)[-1], self)
+          revert_data = frappe.call(
+              frappe.get_hooks('fsm_fields', {}).get(self.doctype, {}).get(self.update_request.docfield)[-1], self)
         else:
           method_call = getattr(self, "_{}".format(self.update_request.docfield), None)
-        
+
         if not (method_call or revert_data):
           raise MethodNotDefinedError
 
@@ -115,11 +148,22 @@ class FSMDocument(Document):
         super().on_update_after_submit()
         :return:
         """
-    if self.self.get('update_request') and not self.is_pending_approval():
+    if self.get('update_request') and not self.is_pending_approval():
       if self.is_revert:
         self.set_as_reverted()
       else:
         self.set_as_success()
+
+  def after_insert(self):
+    """
+    Set the Update Request as "Success"
+    If the method is implemented in the subclass, to be called in the subclass's method as:
+    super().before_insert()
+    :return:
+    """
+    if self.get('update_request') and not self.is_pending_approval():
+      self.update_request.created_docname = self.name
+      self.set_as_success()
 
   def add_error_to_update_request(self, error: str):
     """

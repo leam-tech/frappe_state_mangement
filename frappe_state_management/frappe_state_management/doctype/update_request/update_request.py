@@ -14,8 +14,10 @@ from frappe_state_management.classes.fsm_error import PendingUpdateRequestError
 
 class UpdateRequest(Document):
   status: str
+  request_type: str
   dt: str
   docname: str
+  created_docname: str
   docfield: str
   type: str
   data: str
@@ -36,23 +38,28 @@ class UpdateRequest(Document):
     if meta.istable:
       frappe.throw(_("Child DocTypes not allowed"))
 
-    # Check if the target doctype extends FSMDocument
-    from frappe_state_management.classes.fsm_document import FSMDocument
-    doc = frappe.get_doc(self.dt, self.docname)
-    if not isinstance(doc, FSMDocument):
-      frappe.throw(_("Target DocType does not extend FSMDocument"), ValidationError)
-
     # Check if existing Pending Update Request exist
     if len(frappe.get_all('Update Request', filters={"dt": self.dt, "docname": self.docname, "docstatus": 1,
                                                      "status": ['in', ['Pending', 'Pending Approval']]})) > 0:
       raise PendingUpdateRequestError
 
-    # Check if either docfield or custom call is specified
-    if not self.docfield and not self.custom_call:
-      frappe.throw(_("Either docfield or Custom Call should be specified"), ValidationError)
+    if self.request_type != 'Create':
 
-    if self.docfield and not self.type:
-      frappe.throw(_("Docfield type must be selected"), ValidationError)
+      # Check if the target doctype extends FSMDocument
+      from frappe_state_management.classes.fsm_document import FSMDocument
+      doc = frappe.get_doc(self.dt, self.docname)
+      if not isinstance(doc, FSMDocument):
+        frappe.throw(_("Target DocType does not extend FSMDocument"), ValidationError)
+
+      # Check if either docfield or custom call is specified
+      if not self.docfield and not self.custom_call:
+        frappe.throw(_("Either docfield or Custom Call should be specified"), ValidationError)
+
+      if self.docfield and not self.type:
+        frappe.throw(_("Docfield type must be selected"), ValidationError)
+    else:
+      if not self.data or not isinstance(frappe.parse_json(self.data), frappe._dict):
+        frappe.throw(_("Invalid Data field, make sure it's a JSON object"), ValidationError)
 
   def before_insert(self):
     """
@@ -61,20 +68,14 @@ class UpdateRequest(Document):
     """
     if self.status != 'Pending':
       self.status = 'Pending'
-    if self.error:
-      self.error = ''
-    if self.revert_items:
-      self.revert_items = []
-    if self.approval_party:
-      self.approval_party = ''
-    if self.approved_by:
-      self.approved_by = ''
-    if self.approved_on:
-      self.approved_on = None
-    if self.rejected_by:
-      self.rejected_by = ''
-    if self.rejected_on:
-      self.rejected_on = None
+    self.created_docname = ''
+    self.error = ''
+    self.revert_items = []
+    self.approval_party = ''
+    self.approved_by = ''
+    self.approved_on = None
+    self.rejected_by = ''
+    self.rejected_on = None
 
   def on_submit(self):
     """
@@ -96,8 +97,13 @@ class UpdateRequest(Document):
     Applies the update request by calling `FSMDocument` apply_update_request
     :return:
     """
-    doc = frappe.get_doc(self.dt, self.docname)
-    getattr(doc, 'apply_update_request')(self)
+
+    if self.request_type != 'Create':
+      doc = frappe.get_doc(self.dt, self.docname)
+      getattr(doc, 'apply_update_request')(self)
+    else:
+      doc = frappe.get_doc(frappe.parse_json(self.data))
+      getattr(doc, 'create_document')(self)
 
   def revert(self):
     """

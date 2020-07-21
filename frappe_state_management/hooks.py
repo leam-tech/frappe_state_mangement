@@ -11,6 +11,8 @@ app_color = "grey"
 app_email = "admin@leam.ae"
 app_license = "MIT"
 
+fixtures = [{'dt': 'Property Setter', 'filters': [['app_name', '=', 'frappe_state_management']]}]
+
 # Includes in <head>
 # ------------------
 
@@ -126,4 +128,3 @@ app_license = "MIT"
 # override_doctype_dashboards = {
 # 	"Task": "frappe_state_management.task.get_dashboard_data"
 # }
-
