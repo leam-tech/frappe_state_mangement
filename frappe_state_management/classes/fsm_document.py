@@ -100,7 +100,7 @@ class FSMDocument(Document):
         if not revert_data and method_call:
           revert_data = method_call()
         if not self.is_pending_approval():
-          if not revert_data or not len(revert_data):
+          if not revert_data and not len(revert_data):
             raise MissingRevertDataError
           self.add_revert_data(revert_data)
 
@@ -112,8 +112,10 @@ class FSMDocument(Document):
       else:
         frappe.throw(_('Update Request processed. Create a new one for updates'))
     except Exception as e:
-      self.add_error_to_update_request(
-          "Exception Name: {name}\nException Message: {message}".format(name=type(e).__name__, message=str(e)))
+      msg = "Exception Name: {name}\nException Message: {message}".format(name=type(e).__name__, message=str(e))
+      if frappe.conf.get('developer_mode'):
+        msg += 'Traceback: {}'.format(frappe.get_traceback())
+      self.add_error_to_update_request(msg)
 
   def set_as_pending_approval(self, approval_party):
     self.update_request.status = 'Pending Approval'
@@ -184,6 +186,9 @@ class FSMDocument(Document):
     :param revert_items: List of items affected by the Update Request
     :return:
     """
+    if not isinstance(revert_items, (list, tuple)):
+      return
+    
     for item in revert_items:
       self.update_request.append('revert_items', item)
 
@@ -221,7 +226,11 @@ class FSMDocument(Document):
     return self.update_request.type == 'Delete Child Row'
 
   def parse_data(self, data=None):
-    return frappe._dict(frappe.parse_json(frappe.parse_json(copy.copy(data or self.update_request.data))))
+    try:
+      return frappe._dict(frappe.parse_json(frappe.parse_json(copy.copy(data or self.update_request.data))))
+    except :
+      import ast
+      return frappe._dict(ast.literal_eval(copy.copy(data or self.update_request.data)))
 
   def validate_child_table(self):
     # Validate if `data` field is not provided, raise Error
