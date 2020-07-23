@@ -39,8 +39,12 @@ class UpdateRequest(Document):
       frappe.throw(_("Child DocTypes not allowed"))
 
     # Check if existing Pending Update Request exist
-    if len(frappe.get_all('Update Request', filters={"dt": self.dt, "docname": self.docname, "docstatus": 1,
-                                                     "status": ['in', ['Pending', 'Pending Approval']]})) > 0:
+    requests = frappe.get_all('Update Request',
+                              filters=[["dt", "=", self.dt], ["docstatus", "=", 1], ['docname', '!=', None],
+                                       ['docname', '=', self.docname],
+                                       ["status", "IN", ['Pending', 'Pending Approval']]])
+
+    if len(requests) > 0:
       raise PendingUpdateRequestError
 
     if self.request_type != 'Create':
