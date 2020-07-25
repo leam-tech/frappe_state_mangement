@@ -15,10 +15,12 @@ def approve(update_request: str) -> dict:
   user = frappe.session.user
 
   update_request_doc: UpdateRequest = frappe.get_doc(dt, update_request)
-  update_request_doc.status = 'Approved'
-  update_request_doc.approved_by = user
-  update_request_doc.approved_on = now_datetime()
-  update_request_doc.save()
+  # Only update the update request if it's Pending Approval. Otherwise return the update request as-is
+  if update_request_doc.status == 'Pending Approval':
+    update_request_doc.status = 'Approved'
+    update_request_doc.approved_by = user
+    update_request_doc.approved_on = now_datetime()
+    update_request_doc.save()
   return update_request_doc.as_dict()
 
 
@@ -32,10 +34,12 @@ def reject(update_request: str) -> dict:
   user = frappe.session.user
 
   update_request_doc: UpdateRequest = frappe.get_doc(dt, update_request)
-  update_request_doc.status = 'Rejected'
-  update_request_doc.rejected_by = user
-  update_request_doc.rejected_on = now_datetime()
-  update_request_doc.save()
+  # Only update the update request if it's Pending Approval. Otherwise return the update request as-is
+  if update_request_doc.status == 'Pending Approval':
+    update_request_doc.status = 'Rejected'
+    update_request_doc.rejected_by = user
+    update_request_doc.rejected_on = now_datetime()
+    update_request_doc.save()
   return update_request_doc.as_dict()
 
 
