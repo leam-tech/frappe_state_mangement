@@ -6,6 +6,7 @@ from frappe.model.document import Document
 from frappe_state_management.classes.fsm_error import MethodNotDefinedError, MissingRevertDataError, \
   MissingOrInvalidDataError
 from frappe_state_management.frappe_state_management.doctype.update_request.update_request import UpdateRequest
+import inspect
 
 child_row_methods = ['Add Child Row', 'Update Child Row', 'Delete Child Row']
 
@@ -98,7 +99,10 @@ class FSMDocument(Document):
           raise MethodNotDefinedError
 
         if not revert_data and method_call:
-          revert_data = method_call()
+          if self.update_request.custom_call and '.' in self.update_request.custom_call and len(inspect.getfullargspec(method_call).args) > 0:
+            revert_data = method_call(self)
+          else:
+            revert_data = method_call()
         if not self.is_pending_approval():
           if not revert_data and not len(revert_data):
             raise MissingRevertDataError
